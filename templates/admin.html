@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel – ResQLink{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">📊 Admin Panel</h1>
+    <p class="page-sub">Manage volunteers, users, and monitor emergency requests</p>
+  </div>
+  <a href="{{ url_for('logout') }}" class="btn btn-red" style="margin-top:1rem;">Logout</a>
+</div>
+
+<!-- STATS -->
+<div class="admin-stats">
+  <div class="astat astat-blue">
+    <div class="astat-num">{{ total_users }}</div>
+    <div class="astat-lbl">Users</div>
+  </div>
+  <div class="astat astat-green">
+    <div class="astat-num">{{ total_vols }}</div>
+    <div class="astat-lbl">Verified Volunteers</div>
+  </div>
+  <div class="astat astat-purple">
+    <div class="astat-num">{{ pending_vol_apps }}</div>
+    <div class="astat-lbl">Pending Applications</div>
+  </div>
+  <div class="astat astat-orange">
+    <div class="astat-num">{{ pending }}</div>
+    <div class="astat-lbl">Pending Requests</div>
+  </div>
+  <div class="astat astat-red">
+    <div class="astat-num">{{ active }}</div>
+    <div class="astat-lbl">Active Requests</div>
+  </div>
+  <div class="astat astat-grey">
+    <div class="astat-num">{{ resolved }}</div>
+    <div class="astat-lbl">Resolved Requests</div>
+  </div>
+</div>
+
+<!-- PENDING VOLUNTEER APPLICATIONS -->
+{% if pending_vol_apps > 0 %}
+<h2 class="sec-heading mt2">⏳ Pending Volunteer Applications ({{ pending_vol_apps }})</h2>
+<div class="table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Name</th><th>Email</th><th>Phone</th><th>Certificate</th><th>Degree</th><th>Applied</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for app in pending_apps %}
+      <tr>
+        <td><strong>{{ app.name }}</strong></td>
+        <td>{{ app.email }}</td>
+        <td>{{ app.phone }}</td>
+        <td>
+          {% if app.certificate_file %}
+          <a href="{{ url_for('static', filename='../uploads/' + app.certificate_file) }}" target="_blank" class="btn-link">📄 View</a>
+          {% else %}
+          —
+          {% endif %}
+        </td>
+        <td>
+          {% if app.degree_file %}
+          <a href="{{ url_for('static', filename='../uploads/' + app.degree_file) }}" target="_blank" class="btn-link">📄 View</a>
+          {% else %}
+          —
+          {% endif %}
+        </td>
+        <td>{{ app.applied_at.strftime('%d %b %Y') }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('approve_volunteer', app_id=app.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-sm btn-green" onclick="return confirm('Approve this application?');">✓ Approve</button>
+          </form>
+          <button class="btn btn-sm btn-red" onclick="showRejectForm({{ app.id }})">✗ Reject</button>
+        </td>
+      </tr>
+      <!-- Hidden reject form -->
+      <tr id="reject-form-{{ app.id }}" style="display:none;">
+        <td colspan="7">
+          <form method="POST" action="{{ url_for('reject_volunteer', app_id=app.id) }}" style="padding:1rem;">
+            <textarea name="admin_notes" placeholder="Reason for rejection..." style="width:100%;padding:8px;"></textarea>
+            <div style="margin-top:10px;">
+              <button type="submit" class="btn btn-sm btn-red">Reject & Send Feedback</button>
+              <button type="button" class="btn btn-sm btn-gray" onclick="showRejectForm({{ app.id }})">Cancel</button>
+            </div>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- APPROVED VOLUNTEERS -->
+<h2 class="sec-heading mt2">✅ Approved Volunteers ({{ total_vols }})</h2>
+<div class="table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Volunteer ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Verified By</th><th>Date Verified</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for vol in approved_vols %}
+      <tr>
+        <td><strong>{{ vol.volunteer_id }}</strong></td>
+        <td>{{ vol.name }}</td>
+        <td>{{ vol.email }}</td>
+        <td>{{ vol.phone }}</td>
+        <td>{{ vol.verified_by_admin or '—' }}</td>
+        <td>{{ vol.created_at.strftime('%d %b %Y') }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_volunteer', vol_id=vol.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-sm btn-red" onclick="return confirm('Delete this volunteer? This action cannot be undone.');">🗑 Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not approved_vols %}
+      <tr><td colspan="7" style="text-align:center;color:#999;padding:2rem;">No approved volunteers yet.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ALL USERS -->
+<h2 class="sec-heading mt2">👥 All Users ({{ total_users }})</h2>
+<div class="table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Name</th><th>Email</th><th>Phone</th><th>Address</th><th>Registered</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in all_users %}
+      <tr>
+        <td><strong>{{ user.name }}</strong></td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.phone }}</td>
+        <td>{{ user.address or '—' }}</td>
+        <td>{{ user.created_at.strftime('%d %b %Y') }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-sm btn-red" onclick="return confirm('Delete this user? All associated data will be removed.');">🗑 Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not all_users %}
+      <tr><td colspan="6" style="text-align:center;color:#999;padding:2rem;">No users registered yet.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ALL EMERGENCY REQUESTS -->
+<h2 class="sec-heading mt2">🚨 All Emergency Requests</h2>
+<div class="table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>ID</th><th>Type</th><th>Requester</th><th>Phone</th>
+        <th>Location</th><th>Volunteer</th><th>Vol ID</th><th>Status</th><th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in all_reqs %}
+      <tr>
+        <td>#{{ r.id }}</td>
+        <td>{{ r.etype }}</td>
+        <td>{{ r.req_name }}</td>
+        <td>{{ r.req_phone }}</td>
+        <td>{{ r.location }}</td>
+        <td>{{ r.vol_name or '—' }}</td>
+        <td>{{ r.vol_vid or '—' }}</td>
+        <td><span class="status-badge badge-{{ r.status }}">{{ r.status|upper }}</span></td>
+        <td>{{ r.created_at.strftime('%d %b %Y') }}</td>
+      </tr>
+      {% endfor %}
+      {% if not all_reqs %}
+      <tr><td colspan="9" style="text-align:center;color:#999;padding:2rem;">No requests yet.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+function showRejectForm(appId){
+  var form = document.getElementById('reject-form-' + appId);
+  if(form.style.display === 'none'){
+    form.style.display = 'table-row';
+  } else {
+    form.style.display = 'none';
+  }
+}
+</script>
+
+<style>
+.btn-link {
+  color: #0066cc;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.btn-link:hover {
+  text-decoration: underline;
+}
+.astat-purple {
+  background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+}
+</style>
+
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}User Login – ResQLink{% endblock %}
+{% block content %}
+
+<div class="auth-wrap">
+  <div class="auth-card">
+
+    <div class="auth-head">
+      <div class="auth-icon-box user-icon-box">🔐</div>
+      <h2>User Login</h2>
+      <p>Login to your ResQLink user account</p>
+    </div>
+
+    <div class="role-notice user-notice">
+      👤 This login is for <strong>Users only</strong>.<br>
+      Volunteers must use the <a href="{{ url_for('vol_login') }}">Volunteer Login</a>.<br>
+      Admins must use the <a href="{{ url_for('admin_login') }}">Admin Login</a>.
+    </div>
+
+    <form method="POST" action="{{ url_for('login') }}"
+          id="loginForm" novalidate autocomplete="off">
+
+      <div class="fg" id="fg-email">
+        <label for="email">Email Address <span class="req">*</span></label>
+        <input type="text" id="email" name="email"
+               autocomplete="off" autocorrect="off" spellcheck="false"
+               placeholder="Enter your email address"
+               value="" />
+        <span class="ferr" id="err-email"></span>
+      </div>
+
+      <div class="fg" id="fg-password">
+        <label for="password">Password <span class="req">*</span></label>
+        <div class="pw-wrap">
+          <input type="password" id="password" name="password"
+                 autocomplete="new-password"
+                 placeholder="Enter your password"
+                 value="" />
+          <button type="button" class="pw-eye" onclick="togglePw('password',this)">👁</button>
+        </div>
+        <span class="ferr" id="err-password"></span>
+      </div>
+
+      <button type="submit" class="btn btn-red btn-full mt1">Login</button>
+    </form>
+
+    <div class="auth-foot">
+      <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+      <p>Are you a Volunteer? <a href="{{ url_for('vol_login') }}">Volunteer Login →</a></p>
+    </div>
+
+    <div class="demo-box">
+      <strong>Demo Account:</strong><br>
+      Email: user@resqlink.com &nbsp;|&nbsp; Password: Test123
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  // Ensure input fields start completely empty on every page load
+  window.addEventListener('load', function() {
+    var fields = document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"]');
+    fields.forEach(function(f) { f.value = ''; });
+  });
+  document.getElementById('email').value = '';
+  document.getElementById('password').value = '';
+
+  function setErr(id, msg){
+    var inp = document.getElementById(id);
+    var err = document.getElementById('err-' + id);
+    var fg  = document.getElementById('fg-' + id);
+    if(msg){
+      if(err) err.textContent = '⚠ ' + msg;
+      if(inp){ inp.classList.add('inp-err'); inp.classList.remove('inp-ok'); }
+      if(fg)  fg.classList.add('fg-has-err');
+    } else {
+      if(err) err.textContent = '';
+      if(inp){ inp.classList.remove('inp-err'); inp.classList.add('inp-ok'); }
+      if(fg)  fg.classList.remove('fg-has-err');
+    }
+  }
+
+  window.togglePw = function(id, btn){
+    var inp = document.getElementById(id);
+    inp.type = (inp.type === 'password') ? 'text' : 'password';
+    btn.textContent = (inp.type === 'password') ? '👁' : '🙈';
+  };
+
+  document.getElementById('email').addEventListener('input', function(){
+    var v = this.value.trim();
+    if(!v){ setErr('email',''); return; }
+    setErr('email', /^[\w\.\+\-]+@[\w\-]+\.[a-zA-Z]{2,}$/.test(v) ? '' : 'Enter a valid email address.');
+  });
+
+  document.getElementById('loginForm').addEventListener('submit', function(e){
+    var ok = true;
+    var email = document.getElementById('email').value.trim();
+    var pw    = document.getElementById('password').value;
+    if(!email || !/^[\w\.\+\-]+@[\w\-]+\.[a-zA-Z]{2,}$/.test(email)){
+      setErr('email','Enter a valid email address.'); ok=false;
+    }
+    if(!pw){
+      setErr('password','Password is required.'); ok=false;
+    }
+    if(!ok) e.preventDefault();
+  });
+})();
+</script>
+
+{% endblock %}

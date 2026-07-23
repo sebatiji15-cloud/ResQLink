@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard – ResQLink{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">👤 My Dashboard</h1>
+    <p class="page-sub">Track your emergency requests</p>
+  </div>
+  <a href="{{ url_for('create_request') }}" class="btn btn-red">🚨 New Emergency Request</a>
+</div>
+
+<!-- STATS -->
+<div class="stat-strip">
+  <div class="stat-item"><span class="stat-num">{{ my_reqs|length }}</span><span class="stat-lbl">Total</span></div>
+  <div class="stat-item stat-orange"><span class="stat-num">{{ my_reqs|selectattr('status','eq','pending')|list|length }}</span><span class="stat-lbl">Pending</span></div>
+  <div class="stat-item stat-blue"><span class="stat-num">{{ my_reqs|selectattr('status','eq','active')|list|length }}</span><span class="stat-lbl">Active</span></div>
+  <div class="stat-item stat-green"><span class="stat-num">{{ my_reqs|selectattr('status','eq','resolved')|list|length }}</span><span class="stat-lbl">Resolved</span></div>
+</div>
+
+{% if my_reqs %}
+<div class="card-grid">
+  {% for r in my_reqs %}
+  <div class="req-card card-{{ r.status }}">
+    <div class="card-top">
+      <span class="etype-tag">{{ r.etype }}</span>
+      <span class="status-badge badge-{{ r.status }}">{{ r.status|upper }}</span>
+    </div>
+
+    <p class="card-desc">{{ r.description }}</p>
+    <p class="card-meta">📍 {{ r.location }}</p>
+    <p class="card-meta">🕐 {{ r.created_at.strftime('%d %b %Y, %I:%M %p') }}</p>
+
+    {% if r.vol_name %}
+    <div class="vol-assigned">
+      🤝 <strong>{{ r.vol_name }}</strong>
+      {% if r.vol_phone %}&nbsp;|&nbsp; 📞 {{ r.vol_phone }}{% endif %}
+    </div>
+    {% else %}
+      {% if r.status == 'pending' %}
+      <p class="waiting-text">⏳ Waiting for volunteer to accept…</p>
+      {% endif %}
+    {% endif %}
+
+    {% if r.status == 'active' %}
+    <form method="POST" action="{{ url_for('resolve', rid=r.id) }}" class="mt1" onsubmit="return confirm('Mark this emergency as resolved?')">
+      <button class="btn btn-green btn-sm">✅ Mark as Resolved</button>
+    </form>
+    {% endif %}
+
+    {% if r.status != 'resolved' %}
+    <div class="live-track" data-rid="{{ r.id }}">
+      <span class="dot-pulse"></span> Live tracking…
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-ico">📋</div>
+  <h3>No emergency requests yet</h3>
+  <p>If you ever need help, submit a request and volunteers will respond.</p>
+  <a href="{{ url_for('create_request') }}" class="btn btn-red mt1">Submit First Request</a>
+</div>
+{% endif %}
+
+{% endblock %}

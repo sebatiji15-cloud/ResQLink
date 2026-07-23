@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Request Emergency Help – ResQLink{% endblock %}
+{% block content %}
+
+<div class="auth-wrap">
+  <div class="auth-card auth-wide">
+    <div class="auth-head">
+      <div class="auth-icon-box" style="background:#fff0f1;color:#e63946;font-size:1.8rem;">🚨</div>
+      <h2>Emergency Help Request</h2>
+      <p>Fill the form below. Volunteers will be notified immediately.</p>
+    </div>
+
+    <!-- EMERGENCY CALL BUTTONS -->
+    <div id="emergency-call-box" style="display:none; margin-bottom:20px;">
+      <div style="background:#fff0f1;border:2px solid #e63946;border-radius:12px;padding:16px 20px;text-align:center;">
+        <p style="margin:0 0 10px;font-weight:700;color:#e63946;font-size:1rem;">⚠️ For immediate help — Call now:</p>
+        <div id="call-buttons" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;"></div>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('create_request') }}" id="reqForm">
+
+      <div class="fg">
+        <label>Type of Emergency <span class="req">*</span></label>
+        <select name="etype" id="etype" required onchange="showCallButtons(this.value)">
+          <option value="">-- Select Emergency Type --</option>
+          <option value="Medical Crisis">🏥 Medical Crisis</option>
+          <option value="Road Accident">🚗 Road Accident</option>
+          <option value="Natural Disaster">🌊 Natural Disaster</option>
+          <option value="Fire Emergency">🔥 Fire Emergency</option>
+          <option value="Personal Safety">🛡️ Personal Safety Threat</option>
+          <option value="Other Urgent Help">🆘 Other Urgent Help</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <label>Describe the Emergency <span class="req">*</span></label>
+        <textarea name="description" rows="4"
+          placeholder="What happened? How many people involved? Any injuries?" required></textarea>
+      </div>
+
+      <div class="fg">
+        <label>Your Location / Address <span class="req">*</span></label>
+        <input type="text" name="location" autocomplete="off"
+          placeholder="Street, Landmark, City, District" required />
+      </div>
+
+      <div class="fg-row">
+        <div class="fg">
+          <label>Latitude</label>
+          <input type="text" id="lat" name="latitude" placeholder="Auto-detected" readonly />
+        </div>
+        <div class="fg">
+          <label>Longitude</label>
+          <input type="text" id="lng" name="longitude" placeholder="Auto-detected" readonly />
+        </div>
+      </div>
+
+      <button type="button" id="gpsBtn" class="btn btn-outline-red btn-full">
+        📍 Auto-Detect My Location
+      </button>
+      <p id="gpsStatus" class="gps-status"></p>
+
+      <button type="submit" class="btn btn-red btn-full mt1">🚨 Submit Emergency Request</button>
+    </form>
+  </div>
+</div>
+
+<style>
+  .call-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: transform 0.15s;
+  }
+  .call-btn:hover { transform: translateY(-2px); color: #fff; text-decoration: none; }
+  .call-btn-red   { background: linear-gradient(135deg,#e63946,#c1121f); }
+  .call-btn-blue  { background: linear-gradient(135deg,#1976d2,#1565c0); }
+  .call-btn-orange{ background: linear-gradient(135deg,#f4a261,#e76f51); }
+  .call-btn-green { background: linear-gradient(135deg,#2dc653,#1b8a38); }
+</style>
+
+<script>
+  // Emergency type → call buttons mapping
+  var emergencyCallMap = {
+    'Medical Crisis': [
+      { label: '🚑 Call Ambulance', number: '108', color: 'call-btn-red' },
+      { label: '🏥 Medical Helpline', number: '104', color: 'call-btn-blue' }
+    ],
+    'Road Accident': [
+      { label: '🚑 Call Ambulance', number: '108', color: 'call-btn-red' },
+      { label: '🚔 Call Police', number: '100', color: 'call-btn-blue' },
+      { label: '🛣️ Road Helpline', number: '1033', color: 'call-btn-orange' }
+    ],
+    'Natural Disaster': [
+      { label: '🆘 Disaster Helpline', number: '1078', color: 'call-btn-red' },
+      { label: '🚒 Fire & Rescue', number: '101', color: 'call-btn-orange' },
+      { label: '🚔 Call Police', number: '100', color: 'call-btn-blue' }
+    ],
+    'Fire Emergency': [
+      { label: '🚒 Call Fire Brigade', number: '101', color: 'call-btn-red' },
+      { label: '🚑 Call Ambulance', number: '108', color: 'call-btn-orange' }
+    ],
+    'Personal Safety': [
+      { label: '🚔 Call Police', number: '100', color: 'call-btn-red' },
+      { label: '👮 Women Helpline', number: '1091', color: 'call-btn-blue' },
+      { label: '🆘 Emergency', number: '112', color: 'call-btn-orange' }
+    ],
+    'Other Urgent Help': [
+      { label: '🆘 Emergency', number: '112', color: 'call-btn-red' },
+      { label: '🚔 Call Police', number: '100', color: 'call-btn-blue' },
+      { label: '🚑 Call Ambulance', number: '108', color: 'call-btn-green' }
+    ]
+  };
+
+  function showCallButtons(etype) {
+    var box      = document.getElementById('emergency-call-box');
+    var btnArea  = document.getElementById('call-buttons');
+    btnArea.innerHTML = '';
+
+    if (!etype || !emergencyCallMap[etype]) {
+      box.style.display = 'none';
+      return;
+    }
+
+    var calls = emergencyCallMap[etype];
+    calls.forEach(function(c) {
+      var a = document.createElement('a');
+      a.href      = 'tel:' + c.number;
+      a.className = 'call-btn ' + c.color;
+      a.innerHTML = c.label + ' <span style="background:rgba(255,255,255,0.25);padding:2px 8px;border-radius:6px;">' + c.number + '</span>';
+      btnArea.appendChild(a);
+    });
+
+    box.style.display = 'block';
+  }
+
+  // GPS auto detect
+  document.getElementById('gpsBtn').addEventListener('click', function(){
+    var s = document.getElementById('gpsStatus');
+    if (!navigator.geolocation) {
+      s.textContent = '❌ Geolocation not supported by your browser.';
+      return;
+    }
+    s.textContent = '⏳ Detecting your location...';
+    navigator.geolocation.getCurrentPosition(function(pos){
+      document.getElementById('lat').value = pos.coords.latitude.toFixed(6);
+      document.getElementById('lng').value = pos.coords.longitude.toFixed(6);
+      s.innerHTML = '✅ Location detected: ' + pos.coords.latitude.toFixed(6) + ', ' + pos.coords.longitude.toFixed(6);
+      s.style.color = '#2dc653';
+    }, function(){
+      s.textContent = '❌ Could not detect location. Please enter manually.';
+      s.style.color = '#e63946';
+    });
+  });
+</script>
+
+{% endblock %}

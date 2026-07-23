@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Volunteer Login – ResQLink{% endblock %}
+{% block content %}
+
+<div class="auth-wrap">
+  <div class="auth-card">
+
+    <div class="auth-head">
+      <div class="auth-icon-box vol-icon-box">🤝</div>
+      <h2>Volunteer Login</h2>
+      <p>Login with your Volunteer ID or Email</p>
+    </div>
+
+    <div class="role-notice vol-notice">
+      🤝 This login is <strong>for Volunteers only</strong>.<br>
+      Users must use the <a href="{{ url_for('login') }}">User Login</a>.
+    </div>
+
+    <form method="POST" action="{{ url_for('vol_login') }}"
+          id="volLoginForm" novalidate autocomplete="off">
+
+      <div class="fg" id="fg-login_input">
+        <label for="login_input">Volunteer ID or Email <span class="req">*</span></label>
+        <input type="text" id="login_input" name="login_input"
+               autocomplete="off" autocorrect="off" spellcheck="false"
+               placeholder="Enter your Volunteer ID (VID-XXXXXX) or Email"
+               value="" />
+        <span class="fhint">Your unique Volunteer ID (e.g., VID-123456) OR your registered email address</span>
+        <span class="ferr" id="err-login_input"></span>
+      </div>
+
+      <div class="fg" id="fg-password">
+        <label for="password">Password <span class="req">*</span></label>
+        <div class="pw-wrap">
+          <input type="password" id="password" name="password"
+                 autocomplete="new-password"
+                 placeholder="Enter your password"
+                 value="" />
+          <button type="button" class="pw-eye" onclick="togglePw('password',this)">👁</button>
+        </div>
+        <span class="ferr" id="err-password"></span>
+      </div>
+
+      <button type="submit" class="btn btn-green btn-full mt1">Login as Volunteer</button>
+    </form>
+
+    <div class="auth-foot">
+      <p>Not registered yet? <a href="{{ url_for('vol_apply') }}">Apply as Volunteer →</a></p>
+      <p>Are you a User? <a href="{{ url_for('login') }}">User Login</a></p>
+    </div>
+
+    <div class="demo-box">
+      <strong>Demo Volunteer Account:</strong><br>
+      Volunteer ID: VID-000001 &nbsp;|&nbsp; Email: volunteer@resqlink.com &nbsp;|&nbsp; Password: Test123
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  // Ensure input fields start completely empty on every page load
+  window.addEventListener('load', function() {
+    var fields = document.querySelectorAll('input[type="text"], input[type="password"]');
+    fields.forEach(function(f) { f.value = ''; });
+  });
+  document.getElementById('login_input').value = '';
+  document.getElementById('password').value = '';
+
+  function setErr(id, msg){
+    var inp = document.getElementById(id);
+    var err = document.getElementById('err-' + id);
+    var fg  = document.getElementById('fg-' + id);
+    if(msg){
+      if(err) err.textContent = '⚠ ' + msg;
+      if(inp){ inp.classList.add('inp-err'); inp.classList.remove('inp-ok'); }
+      if(fg)  fg.classList.add('fg-has-err');
+    } else {
+      if(err) err.textContent = '';
+      if(inp){ inp.classList.remove('inp-err'); inp.classList.add('inp-ok'); }
+      if(fg)  fg.classList.remove('fg-has-err');
+    }
+  }
+
+  // ✅ ENHANCED: Validate both Volunteer ID and Email formats
+  document.getElementById('login_input').addEventListener('input', function(){
+    var v = this.value.trim();
+    if(!v){ setErr('login_input',''); return; }
+    
+    // Check if it's a Volunteer ID format
+    var isVID = /^VID-\d{0,6}$/.test(v);
+    // Check if it's an email format
+    var isEmail = /^[\w\.\+\-]+@[\w\-]+\.[a-zA-Z]{2,}$/.test(v);
+    
+    if(isVID) {
+      setErr('login_input','');
+    } else if(isEmail) {
+      setErr('login_input','');
+    } else if(v.length > 0) {
+      setErr('login_input','Enter a valid Volunteer ID (VID-XXXXXX) or Email address');
+    } else {
+      setErr('login_input','');
+    }
+  });
+
+  window.togglePw = function(id, btn){
+    var inp = document.getElementById(id);
+    inp.type = (inp.type === 'password') ? 'text' : 'password';
+    btn.textContent = (inp.type === 'password') ? '👁' : '🙈';
+  };
+
+  document.getElementById('volLoginForm').addEventListener('submit', function(e){
+    var ok = true;
+    var loginInput = document.getElementById('login_input').value.trim();
+    var pw  = document.getElementById('password').value;
+    
+    if(!loginInput){ 
+      setErr('login_input','Volunteer ID or Email is required.'); 
+      ok=false; 
+    } else {
+      // Validate format
+      var isVID = /^VID-\d{6}$/.test(loginInput);
+      var isEmail = /^[\w\.\+\-]+@[\w\-]+\.[a-zA-Z]{2,}$/.test(loginInput);
+      if(!isVID && !isEmail) {
+        setErr('login_input','Enter a valid Volunteer ID (VID-XXXXXX) or Email address');
+        ok=false;
+      }
+    }
+    
+    if(!pw) { 
+      setErr('password','Password is required.'); 
+      ok=false; 
+    }
+    if(!ok) e.preventDefault();
+  });
+})();
+</script>
+
+{% endblock %}

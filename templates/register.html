@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% block title %}User Register – ResQLink{% endblock %}
+{% block content %}
+
+<div class="auth-wrap">
+  <div class="auth-card">
+
+    <div class="auth-head">
+      <div class="auth-icon-box user-icon-box">👤</div>
+      <h2>User Registration</h2>
+      <p>Create your account to request emergency help</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('register') }}"
+          id="regForm" novalidate autocomplete="off">
+
+      <!-- NAME -->
+      <div class="fg" id="fg-name">
+        <label for="name">Full Name <span class="req">*</span></label>
+        <input type="text" id="name" name="name"
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+               placeholder="Enter your full name"
+               value="" />
+        <span class="ferr" id="err-name"></span>
+      </div>
+
+      <!-- EMAIL -->
+      <div class="fg" id="fg-email">
+        <label for="email">Email Address <span class="req">*</span></label>
+        <input type="text" id="email" name="email"
+               autocomplete="off" autocorrect="off" spellcheck="false"
+               placeholder="name@example.com"
+               value="" />
+        <span class="ferr" id="err-email"></span>
+      </div>
+
+      <!-- PHONE -->
+      <div class="fg" id="fg-phone">
+        <label for="phone">Phone Number <span class="req">*</span></label>
+        <input type="text" id="phone" name="phone"
+               autocomplete="off"
+               placeholder="10-digit mobile number" maxlength="10"
+               value="" />
+        <span class="fhint">Indian mobile only (starts with 6, 7, 8 or 9)</span>
+        <span class="ferr" id="err-phone"></span>
+      </div>
+
+      <!-- ADDRESS -->
+      <div class="fg">
+        <label for="address">Address / Area</label>
+        <input type="text" id="address" name="address"
+               autocomplete="off"
+               placeholder="City, District, State"
+               value="" />
+      </div>
+
+      <!-- PASSWORD -->
+      <div class="fg" id="fg-password">
+        <label for="password">Password <span class="req">*</span></label>
+        <div class="pw-wrap">
+          <input type="password" id="password" name="password"
+                 autocomplete="new-password"
+                 placeholder="Min 6 chars, 1 letter + 1 number"
+                 value="" />
+          <button type="button" class="pw-eye" onclick="togglePw('password',this)">👁</button>
+        </div>
+        <div class="pw-bar-wrap"><div class="pw-bar" id="pw-bar"></div></div>
+        <span class="pw-label" id="pw-label"></span>
+        <span class="fhint">At least 6 characters with 1 letter and 1 number</span>
+        <span class="ferr" id="err-password"></span>
+      </div>
+
+      <!-- CONFIRM PASSWORD -->
+      <div class="fg" id="fg-password_confirm">
+        <label for="password_confirm">Confirm Password <span class="req">*</span></label>
+        <div class="pw-wrap">
+          <input type="password" id="password_confirm" name="password_confirm"
+                 autocomplete="new-password"
+                 placeholder="Re-enter your password"
+                 value="" />
+          <button type="button" class="pw-eye" onclick="togglePw('password_confirm',this)">👁</button>
+        </div>
+        <span class="fhint" id="confirm-hint">Must match the password above</span>
+        <span class="ferr" id="err-password_confirm"></span>
+      </div>
+
+      <button type="submit" class="btn btn-red btn-full mt1">Create Account</button>
+    </form>
+
+    <div class="auth-foot">
+      <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+      <p>Are you a Volunteer? <a href="{{ url_for('vol_apply') }}">Volunteer Application →</a></p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  // Ensure input fields start completely empty on every page load
+  window.addEventListener('load', function() {
+    var fields = document.querySelectorAll('input[type="text"], input[type="password"]');
+    fields.forEach(function(f) { f.value = ''; });
+  });
+  document.getElementById('name').value = '';
+  document.getElementById('email').value = '';
+  document.getElementById('phone').value = '';
+  document.getElementById('address').value = '';
+  document.getElementById('password').value = '';
+  if(document.getElementById('password_confirm')) document.getElementById('password_confirm').value = '';
+
+  // ── Helpers ──────────────────────────────────────────────
+  function setErr(id, msg) {
+    var inp = document.getElementById(id);
+    var err = document.getElementById('err-' + id);
+    var fg  = document.getElementById('fg-' + id);
+    if (msg) {
+      if(err) err.textContent = '⚠ ' + msg;
+      if(inp) { inp.classList.add('inp-err'); inp.classList.remove('inp-ok'); }
+      if(fg)  fg.classList.add('fg-has-err');
+    } else {
+      if(err) err.textContent = '';
+      if(inp) { inp.classList.remove('inp-err'); inp.classList.add('inp-ok'); }
+      if(fg)  fg.classList.remove('fg-has-err');
+    }
+  }
+  function clearErr(id) { setErr(id, ''); }
+
+  function validEmail(v){ return /^[\w\.\+\-]+@[\w\-]+\.[a-zA-Z]{2,}$/.test(v); }
+  function validPhone(v){ return /^[6-9]\d{9}$/.test(v.replace(/\D/g,'')); }
+  function validName(v) { return /^[A-Za-z\s]{2,}$/.test(v.trim()); }
+
+  // ── Phone: digits only ───────────────────────────────────
+  var ph = document.getElementById('phone');
+  ph.addEventListener('input', function(){
+    this.value = this.value.replace(/\D/g,'').slice(0,10);
+    var v = this.value;
+    if(!v){ clearErr('phone'); return; }
+    if(!/^[6-9]/.test(v))     setErr('phone','Must start with 6, 7, 8, or 9.');
+    else if(v.length < 10)    setErr('phone','Enter all 10 digits (' + v.length + '/10 typed).');
+    else                       clearErr('phone');
+  });
+
+  // ── Email live ───────────────────────────────────────────
+  document.getElementById('email').addEventListener('input', function(){
+    var v = this.value.trim();
+    if(!v){ clearErr('email'); return; }
+    setErr('email', validEmail(v) ? '' : 'Enter a valid email (e.g. name@example.com).');
+  });
+
+  // ── Name live ────────────────────────────────────────────
+  document.getElementById('name').addEventListener('input', function(){
+    var v = this.value.trim();
+    if(!v){ clearErr('name'); return; }
+    setErr('name', validName(v) ? '' : 'Name must contain only letters and spaces.');
+  });
+
+  // ── Password strength ────────────────────────────────────
+  var pwColors = ['','#e63946','#f4a261','#ffd166','#2dc653','#06d6a0'];
+  var pwLabels = ['','Very Weak','Weak','Fair','Strong','Very Strong'];
+  document.getElementById('password').addEventListener('input', function(){
+    var v = this.value;
+    var score = 0;
+    if(v.length >= 6)  score++;
+    if(v.length >= 10) score++;
+    if(/[A-Za-z]/.test(v)) score++;
+    if(/\d/.test(v))   score++;
+    if(/[^A-Za-z0-9]/.test(v)) score++;
+
+    var bar   = document.getElementById('pw-bar');
+    var label = document.getElementById('pw-label');
+    bar.style.width = (score * 20) + '%';
+    bar.style.background = pwColors[score] || '#ddd';
+    label.textContent = v.length > 0 ? pwLabels[score] : '';
+    label.style.color = pwColors[score] || '';
+
+    if(!v){ clearErr('password'); return; }
+    if(v.length < 6)           setErr('password','At least 6 characters required.');
+    else if(!/[A-Za-z]/.test(v)) setErr('password','Add at least one letter.');
+    else if(!/\d/.test(v))       setErr('password','Add at least one number.');
+    else                          clearErr('password');
+  });
+
+  // ── Toggle password visibility ───────────────────────────
+  window.togglePw = function(id, btn){
+    var inp = document.getElementById(id);
+    inp.type = (inp.type === 'password') ? 'text' : 'password';
+    btn.textContent = (inp.type === 'password') ? '👁' : '🙈';
+  };
+
+  // ── Confirm password live check ──────────────────────────
+  function setConfirmErr(msg) {
+    var inp  = document.getElementById('password_confirm');
+    var err  = document.getElementById('err-password_confirm');
+    var hint = document.getElementById('confirm-hint');
+    if (msg) {
+      err.textContent = '⚠ ' + msg;
+      inp.classList.add('inp-err'); inp.classList.remove('inp-ok');
+      hint.textContent = 'Must match the password above';
+      hint.style.color = '';
+    } else {
+      err.textContent = '';
+      inp.classList.remove('inp-err'); inp.classList.add('inp-ok');
+      hint.textContent = '✅ Passwords match!';
+      hint.style.color = '#2dc653';
+    }
+  }
+
+  document.getElementById('password_confirm').addEventListener('input', function(){
+    var pw = document.getElementById('password').value;
+    var v  = this.value;
+    if (!v) { setConfirmErr(''); document.getElementById('confirm-hint').textContent = 'Must match the password above'; document.getElementById('confirm-hint').style.color=''; return; }
+    if (v !== pw) setConfirmErr('Passwords do not match.');
+    else setConfirmErr('');
+  });
+
+  // Also recheck confirm when password changes
+  document.getElementById('password').addEventListener('input', function(){
+    var conf = document.getElementById('password_confirm').value;
+    if (conf) {
+      if (conf !== this.value) setConfirmErr('Passwords do not match.');
+      else setConfirmErr('');
+    }
+  });
+
+  // ── Submit validation ────────────────────────────────────
+  document.getElementById('regForm').addEventListener('submit', function(e){
+    var ok = true;
+    var name  = document.getElementById('name').value.trim();
+    var email = document.getElementById('email').value.trim();
+    var phone = document.getElementById('phone').value.trim();
+    var pw    = document.getElementById('password').value;
+
+    if(!name || !validName(name)){
+      setErr('name','Enter your full name (letters only, min 2 characters).'); ok=false;
+    }
+    if(!email || !validEmail(email)){
+      setErr('email','Enter a valid email address.'); ok=false;
+    }
+    if(!phone || !validPhone(phone)){
+      setErr('phone','Enter a valid 10-digit mobile number starting with 6-9.'); ok=false;
+    }
+    if(!pw || pw.length < 6 || !/[A-Za-z]/.test(pw) || !/\d/.test(pw)){
+      setErr('password','Password needs 6+ chars with at least 1 letter and 1 number.'); ok=false;
+    }
+    var pwConf = document.getElementById('password_confirm').value;
+    if(!pwConf){ setConfirmErr('Please confirm your password.'); ok=false; }
+    else if(pw !== pwConf){ setConfirmErr('Passwords do not match.'); ok=false; }
+    if(!ok) e.preventDefault();
+  });
+})();
+</script>
+
+{% endblock %}

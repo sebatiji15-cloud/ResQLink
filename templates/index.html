@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}ResQLink – Emergency Response System{% endblock %}
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">Web-Based Emergency Coordination System</div>
+    <h1 class="hero-title">Emergency Help,<br><span class="text-red">When It Matters Most</span></h1>
+    <p class="hero-sub">ResQLink connects people in crisis with nearby volunteers instantly. Fast. Reliable. Community-driven.</p>
+    <div class="hero-btns">
+      <a href="{{ url_for('register') }}" class="btn btn-red btn-lg">🚨 Get Help – Register as User</a>
+      <a href="{{ url_for('vol_apply') }}" class="btn btn-outline-red btn-lg">🤝 Apply as Volunteer</a>
+    </div>
+    <div class="sdg-row">
+      <span class="sdg-pill">🎯 SDG 3 – Good Health &amp; Well-being</span>
+      <span class="sdg-pill">🏙️ SDG 11 – Sustainable Cities</span>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section bg-light">
+  <div class="section-inner">
+    <h2 class="sec-title">How ResQLink Works</h2>
+    <p class="sec-sub">Simple 4-step process to get help fast</p>
+    <div class="steps-row">
+      <div class="step-box">
+        <div class="step-num">01</div>
+        <div class="step-icon">📝</div>
+        <h3>Register</h3>
+        <p>Sign up as a User who may need help, or as a Volunteer ready to respond.</p>
+      </div>
+      <div class="step-arr">→</div>
+      <div class="step-box">
+        <div class="step-num">02</div>
+        <div class="step-icon">🚨</div>
+        <h3>Send Alert</h3>
+        <p>Submit an emergency request with your location details in seconds.</p>
+      </div>
+      <div class="step-arr">→</div>
+      <div class="step-box">
+        <div class="step-num">03</div>
+        <div class="step-icon">🔔</div>
+        <h3>Volunteer Responds</h3>
+        <p>Registered volunteers see your alert and accept the request immediately.</p>
+      </div>
+      <div class="step-arr">→</div>
+      <div class="step-box">
+        <div class="step-num">04</div>
+        <div class="step-icon">✅</div>
+        <h3>Resolved</h3>
+        <p>Track status live: pending → active → resolved.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TWO PORTALS -->
+<section class="section">
+  <div class="section-inner">
+    <h2 class="sec-title">Two Separate Portals</h2>
+    <div class="portal-row">
+      <div class="portal-card portal-user">
+        <div class="portal-icon">👤</div>
+        <h3>User Portal</h3>
+        <p>Register as a User to submit emergency requests, track live status, and get help from volunteers near you.</p>
+        <div style="margin-top:1.2rem;">
+          <a href="{{ url_for('register') }}" class="btn btn-red">Register as User</a>
+          <a href="{{ url_for('login') }}" class="btn btn-ghost" style="margin-left:8px;">User Login</a>
+        </div>
+      </div>
+      <div class="portal-card portal-vol">
+        <div class="portal-icon">🤝</div>
+        <h3>Volunteer Portal</h3>
+        <p>Apply as a Volunteer with proof of qualification. After approval, get your unique Volunteer ID and start helping!</p>
+        <div style="margin-top:1.2rem;">
+          <a href="{{ url_for('vol_apply') }}" class="btn btn-green">Apply as Volunteer</a>
+          <a href="{{ url_for('vol_login') }}" class="btn btn-ghost" style="margin-left:8px;">Volunteer Login</a>
+        </div>
+      </div>
+      <div class="portal-card" style="border-top: 3px solid #ff6b6b;">
+        <div class="portal-icon" style="font-size: 2rem;">🔐</div>
+        <h3>Admin Portal</h3>
+        <p>System administrators can manage volunteers, users, and monitor emergency requests.</p>
+        <div style="margin-top:1.2rem;">
+          <a href="{{ url_for('admin_login') }}" class="btn btn-red">Admin Login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EMERGENCY TYPES -->
+<section class="section bg-light">
+  <div class="section-inner">
+    <h2 class="sec-title">Emergency Types Supported</h2>
+    <div class="etype-grid">
+      <div class="etype-card" style="border-top:3px solid #e63946">🏥<br>Medical Crisis</div>
+      <div class="etype-card" style="border-top:3px solid #f4a261">🚗<br>Road Accident</div>
+      <div class="etype-card" style="border-top:3px solid #4361ee">🌊<br>Natural Disaster</div>
+      <div class="etype-card" style="border-top:3px solid #ff6b35">🔥<br>Fire Emergency</div>
+      <div class="etype-card" style="border-top:3px solid #9b5de5">🛡️<br>Personal Safety</div>
+      <div class="etype-card" style="border-top:3px solid #06d6a0">🆘<br>Other Urgent Help</div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

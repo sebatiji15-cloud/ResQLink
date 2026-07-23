@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Application Submitted – ResQLink{% endblock %}
+{% block content %}
+
+<style>
+  .approval-page {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+  }
+
+  /* ── Modal Card ─────────────────────────── */
+  .approval-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 50px 40px 40px;
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    animation: popIn 0.5s cubic-bezier(0.22,1,0.36,1);
+    position: relative;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.85) translateY(30px); opacity:0; }
+    to   { transform: scale(1)    translateY(0);    opacity:1; }
+  }
+
+  /* ── Spinner ─────────────────────────────── */
+  .spinner-ring {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 7px solid #e8f4fd;
+    border-top-color: #1976d2;
+    border-right-color: #64b5f6;
+    animation: spin 1.1s linear infinite;
+    margin: 0 auto 24px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Badge ───────────────────────────────── */
+  .pending-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff8e1;
+    border: 2px solid #ffb300;
+    color: #e65100;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.07em;
+    padding: 5px 16px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+  }
+
+  .approval-card h2 {
+    font-size: 1.6rem;
+    color: #1a237e;
+    margin: 0 0 10px;
+    font-weight: 800;
+  }
+  .approval-card .subtitle {
+    color: #607d8b;
+    font-size: 0.97rem;
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  /* ── Flow Steps ───────────────────────────── */
+  .flow-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 28px;
+    text-align: left;
+  }
+  .flow-steps li {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 13px 16px;
+    border-radius: 12px;
+    background: #f8faff;
+    border: 1px solid #e3eafc;
+    margin-bottom: 10px;
+    font-size: 0.93rem;
+    color: #37474f;
+    line-height: 1.5;
+  }
+  .flow-steps li .step-num {
+    background: #1976d2;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.8rem;
+    border-radius: 50%;
+    min-width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .flow-steps li.done .step-num { background: #43a047; }
+  .flow-steps li.active-step { border-color: #ffb300; background: #fffde7; }
+  .flow-steps li.active-step .step-num { background: #ffb300; color: #333; }
+
+  /* ── Email highlight box ─────────────────── */
+  .email-box {
+    background: #e8f5e9;
+    border: 2px solid #66bb6a;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 0 0 26px;
+    font-size: 0.93rem;
+    color: #2e7d32;
+    line-height: 1.6;
+  }
+  .email-box strong { font-size: 1rem; }
+
+  /* ── Divider ─────────────────────────────── */
+  .divider { border: none; border-top: 1px solid #eceff1; margin: 0 0 24px; }
+
+  /* ── Buttons ─────────────────────────────── */
+  .btn-home {
+    display: inline-block;
+    background: linear-gradient(135deg, #1976d2, #1565c0);
+    color: #fff;
+    text-decoration: none;
+    padding: 13px 36px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1rem;
+    box-shadow: 0 4px 14px rgba(25,118,210,0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-home:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(25,118,210,0.45);
+    color: #fff;
+    text-decoration: none;
+  }
+  .vol-login-link {
+    display: block;
+    margin-top: 14px;
+    color: #1976d2;
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+  .vol-login-link:hover { text-decoration: underline; }
+</style>
+
+<div class="approval-page">
+  <div class="approval-card">
+
+    <!-- Spinner -->
+    <div class="spinner-ring" aria-hidden="true"></div>
+
+    <!-- Badge -->
+    <div class="pending-badge">⏳ Pending Admin Approval</div>
+
+    <!-- Heading -->
+    <h2>Application Submitted!</h2>
+    <p class="subtitle">
+      Your volunteer application has been received successfully.<br>
+      Here's what happens next:
+    </p>
+
+    <!-- Step-by-step flow -->
+    <ul class="flow-steps">
+      <li class="done">
+        <span class="step-num">✓</span>
+        <span><strong>Application Submitted</strong> — Your details and documents have been recorded in our system.</span>
+      </li>
+      <li class="active-step">
+        <span class="step-num">2</span>
+        <span><strong>Admin Review</strong> — Our admin team will verify your certificate and degree documents.</span>
+      </li>
+      <li>
+        <span class="step-num">3</span>
+        <span><strong>Approval &amp; ID Assignment</strong> — Admin approves your application and a unique <strong>Volunteer ID (VID-XXXXXX)</strong> is generated for you.</span>
+      </li>
+      <li>
+        <span class="step-num">4</span>
+        <span><strong>Email Notification</strong> — Your Volunteer ID is sent directly to your registered email address.</span>
+      </li>
+      <li>
+        <span class="step-num">5</span>
+        <span><strong>Login</strong> — Use your Volunteer ID + password to login via the Volunteer Login page.</span>
+      </li>
+    </ul>
+
+    <!-- Email callout -->
+    <div class="email-box">
+      📧 <strong>Check your email inbox after approval.</strong><br>
+      Your unique <strong>Volunteer ID (VID-XXXXXX)</strong> will be sent to the email address you registered with. Also check your <em>Spam / Junk</em> folder if you don't see it.
+    </div>
+
+    <hr class="divider">
+
+    <a href="{{ url_for('index') }}" class="btn-home">🏠 Return to Home</a>
+    <a href="{{ url_for('vol_login') }}" class="vol-login-link">Already received your VID? Login here →</a>
+
+  </div>
+</div>
+
+{% endblock %}

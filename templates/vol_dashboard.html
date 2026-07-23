@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Volunteer Dashboard – ResQLink{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">🤝 Volunteer Dashboard</h1>
+    <p class="page-sub">Volunteer ID: <strong class="vid-display">{{ vid }}</strong></p>
+  </div>
+  <span class="vol-active-badge">● Active Volunteer</span>
+</div>
+
+<!-- STATS -->
+<div class="stat-strip">
+  <div class="stat-item stat-orange"><span class="stat-num">{{ open_reqs|length }}</span><span class="stat-lbl">Open Requests</span></div>
+  <div class="stat-item stat-green"><span class="stat-num">{{ my_history|length }}</span><span class="stat-lbl">My Responses</span></div>
+</div>
+
+<!-- LIVE REQUESTS -->
+<h2 class="sec-heading">🔴 Live Emergency Requests
+  <span class="count-tag">{{ open_reqs|length }}</span>
+</h2>
+
+<style>
+  .emergency-calls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+    padding: 12px;
+    background: #fff0f1;
+    border-radius: 10px;
+    border: 1px solid #ffcdd2;
+  }
+  .emergency-calls p {
+    width: 100%;
+    margin: 0 0 8px;
+    font-weight: 700;
+    color: #e63946;
+    font-size: 0.88rem;
+  }
+  .ecall-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #fff;
+    text-decoration: none;
+    transition: transform 0.15s;
+  }
+  .ecall-btn:hover { transform: translateY(-2px); color:#fff; text-decoration:none; }
+  .ecall-red    { background: #e63946; }
+  .ecall-blue   { background: #1976d2; }
+  .ecall-orange { background: #e76f51; }
+</style>
+
+{% if open_reqs %}
+<div class="card-grid">
+  {% for r in open_reqs %}
+  <div class="req-card card-{{ r.status }} {% if r.status == 'pending' %}card-urgent{% endif %}">
+    <div class="card-top">
+      <span class="etype-tag">{{ r.etype }}</span>
+      <span class="status-badge badge-{{ r.status }}">{{ r.status|upper }}</span>
+    </div>
+
+    <p class="card-desc">{{ r.description }}</p>
+    <p class="card-meta">📍 {{ r.location }}</p>
+    <p class="card-meta">👤 <strong>{{ r.req_name }}</strong> &nbsp;📞 {{ r.req_phone }}</p>
+    <p class="card-meta">🕐 {{ r.created_at.strftime('%d %b %Y, %I:%M %p') }}</p>
+
+    <!-- EMERGENCY CALL BUTTONS based on type -->
+    <div class="emergency-calls">
+      <p>⚡ Quick Emergency Calls:</p>
+      {% if r.etype == 'Medical Crisis' %}
+        <a href="tel:108" class="ecall-btn ecall-red">🚑 Ambulance 108</a>
+        <a href="tel:104" class="ecall-btn ecall-blue">🏥 Medical 104</a>
+      {% elif r.etype == 'Road Accident' %}
+        <a href="tel:108" class="ecall-btn ecall-red">🚑 Ambulance 108</a>
+        <a href="tel:100" class="ecall-btn ecall-blue">🚔 Police 100</a>
+        <a href="tel:1033" class="ecall-btn ecall-orange">🛣️ Road 1033</a>
+      {% elif r.etype == 'Natural Disaster' %}
+        <a href="tel:1078" class="ecall-btn ecall-red">🆘 Disaster 1078</a>
+        <a href="tel:101" class="ecall-btn ecall-orange">🚒 Fire 101</a>
+        <a href="tel:100" class="ecall-btn ecall-blue">🚔 Police 100</a>
+      {% elif r.etype == 'Fire Emergency' %}
+        <a href="tel:101" class="ecall-btn ecall-red">🚒 Fire Brigade 101</a>
+        <a href="tel:108" class="ecall-btn ecall-orange">🚑 Ambulance 108</a>
+      {% elif r.etype == 'Personal Safety' %}
+        <a href="tel:100" class="ecall-btn ecall-red">🚔 Police 100</a>
+        <a href="tel:1091" class="ecall-btn ecall-blue">👮 Women 1091</a>
+        <a href="tel:112" class="ecall-btn ecall-orange">🆘 Emergency 112</a>
+      {% else %}
+        <a href="tel:112" class="ecall-btn ecall-red">🆘 Emergency 112</a>
+        <a href="tel:100" class="ecall-btn ecall-blue">🚔 Police 100</a>
+        <a href="tel:108" class="ecall-btn ecall-orange">🚑 Ambulance 108</a>
+      {% endif %}
+    </div>
+
+    {% if r.status == 'pending' %}
+    <form method="POST" action="{{ url_for('accept_request', req_id=r.id) }}" class="mt1">
+      <button class="btn btn-red">🚀 Accept &amp; Respond</button>
+    </form>
+    {% elif r.status == 'active' and r.volunteer_id == session.uid %}
+    <p class="accepted-text">✅ You accepted this request</p>
+    <form method="POST" action="{{ url_for('resolve_request', req_id=r.id) }}" class="mt1" onsubmit="return confirm('Mark as resolved?')">
+      <button class="btn btn-green btn-sm">✅ Mark Resolved</button>
+    </form>
+    {% elif r.status == 'active' %}
+    <p class="card-meta" style="color:#999;">Being handled by another volunteer.</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-ico">✅</div>
+  <h3>No active emergency requests</h3>
+  <p>Stay ready! Requests will appear here when users need help.</p>
+</div>
+{% endif %}
+
+<!-- RESPONSE HISTORY -->
+<h2 class="sec-heading mt2">📋 My Response History</h2>
+{% if my_history %}
+<div class="table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr><th>#</th><th>Type</th><th>Requester</th><th>Location</th><th>Status</th><th>Date</th></tr>
+    </thead>
+    <tbody>
+      {% for r in my_history %}
+      <tr>
+        <td>#{{ r.id }}</td>
+        <td>{{ r.etype }}</td>
+        <td>{{ r.req_name }}</td>
+        <td>{{ r.location }}</td>
+        <td><span class="status-badge badge-{{ r.status }}">{{ r.status|upper }}</span></td>
+        <td>{{ r.created_at.strftime('%d %b %Y') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p style="color:#888;">You haven't responded to any requests yet.</p>
+{% endif %}
+
+{% endblock %}
